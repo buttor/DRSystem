@@ -31,6 +31,7 @@ namespace DRSystem
         private Dictionary<Control, ControlInfo> controlsInfo = new Dictionary<Control, ControlInfo>();
         private Size formOriginalSize;
         private bool isInitialized = false;
+        private FormWindowState previousWindowState;    // 记录前一个窗口状态
 
         public MainForm()
         {
@@ -42,15 +43,16 @@ namespace DRSystem
                 ControlStyles.UserPaint |             // 控件将自行绘制，而不是通过操作系统来绘制
                 ControlStyles.DoubleBuffer,           // 启用双缓冲
                 true);
-
-
         }
 
+
+        #region 界面窗口事件
         private void MainForm_Load(object sender, EventArgs e)
         {
             formOriginalSize = this.ClientSize;
+            previousWindowState = this.WindowState;     // 初始化前一个窗口状态
 
-            // 初始化所有控件的原始信息
+            // 初始化所有控件的原始信息 `
             InitializeControlsInfo(this);
 
             // 标记初始化完成
@@ -103,8 +105,71 @@ namespace DRSystem
             }
         }
 
+        private void MainForm_SizeChanged(object sender, EventArgs e)
+        {
+            if(!isInitialized) return;
 
-        // 初始化控件信息，递归处理所有的子控件
+            // 处理窗口状态变化
+            if(this.WindowState != previousWindowState)
+            {
+                // 如果最大化或者恢复正常大小、立即调整控件
+                if(this.WindowState == FormWindowState.Maximized ||
+                    (previousWindowState == FormWindowState.Maximized && this.WindowState == FormWindowState.Normal))
+                {
+                    ResizeControlsForCurrentState();
+                }
+                previousWindowState = this.WindowState;
+            }
+        }
+        #endregion
+
+        /// <summary>
+        /// 根据当前窗口状态调整控件大小
+        /// </summary>
+        private void ResizeControlsForCurrentState()
+        {
+            // Application.DoEvents();
+            try
+            {
+                this.SuspendLayout();
+
+                // 计算当前客户区大小与原始大小的比例
+                float scaleX = (float)this.ClientSize.Width / formOriginalSize.Width;
+                float scaleY = (float)this.ClientSize.Height / formOriginalSize.Height;
+
+                // 暂停所有控件的布局
+                foreach (Control control in controlsInfo.Keys)
+                {
+                    if (!control.IsDisposed)
+                    {
+                        control.SuspendLayout();
+                    }
+                }
+
+                // 递归调整所有控件的大小
+                ResizeControls(this, scaleX, scaleY);
+
+                // 恢复所有控件的布局
+                foreach (Control control in controlsInfo.Keys)
+                {
+                    if (!control.IsDisposed)
+                    {
+                        control.ResumeLayout(true);
+                    }
+                }
+                // 恢复窗体布局
+                this.ResumeLayout(true);
+            }
+            catch (Exception ex) 
+            {
+                MessageBox.Show($"Resize error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 初始化控件信息，递归处理所有的子控件
+        /// </summary>
+        /// <param name="parent">父控件</param>
         private void InitializeControlsInfo(Control parent)
         {
             foreach (Control control in parent.Controls)
@@ -169,7 +234,7 @@ namespace DRSystem
         /// <param name="scaleY">高度缩放比例</param>
         private void ResizeControls(Control parent, float scaleX, float scaleY)
         {
-            foreach (Control control in parent.Controls)                                    // 初次调用Controls的Count=3,即:tablelayoutpanel,menustrips,statusStrips
+            foreach (Control control in parent.Controls)
             {
                 if (controlsInfo.TryGetValue(control, out ControlInfo originalInfo))
                 {
@@ -218,20 +283,27 @@ namespace DRSystem
                     tlp.ColumnStyles[i].Width = originalInfo.OriginalColumnWidths[i] * scaleX;
                 }
             }
-
             // 处理TableLayoutPanel内的子控件
             ResizeControls(tlp, scaleX, scaleY);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tcl"></param>
+        /// <param name="scaleX"></param>
+        /// <param name="scaleY"></param>
+        /// <param name="originalInfo"></param>
         private void ResizeTabcontrol(TabControl tcl, float scaleX, float scaleY, ControlInfo originalInfo)
         {
             float newFontSize = originalInfo.OriginalFontSize * Math.Min(scaleX, scaleY);
 
             // 确保字体大小在合理范围内(6-72)
-            if (newFontSize >= 6 && newFontSize <= 72)
+            if (newFontSize >= 6 && newFontSize <= 20)
             {
                 tcl.Font = new Font(tcl.Font.Name, newFontSize, tcl.Font.Style, tcl.Font.Unit);              
             }
+            // 处理TabControl中的子控件
             ResizeControls(tcl, scaleX, scaleY);
         }
 
@@ -253,74 +325,22 @@ namespace DRSystem
                     (int)(originalInfo.OriginalLocation.X * scaleX),
                     (int)(originalInfo.OriginalLocation.Y * scaleY));
             }
-
-            // 需要调整字体的控件类型列表
-            bool shouldResizeFont = control is Label ||
-                                  control is Button ||
-                                  control is TextBox ||
-                                  control is ComboBox ||
-                                  control is CheckBox ||
-                                  control is RadioButton ||
-                                  control is GroupBox ||
-                                  control is TabPage ||
-                                  control is LinkLabel;         
-
-            // 统一处理字体缩放
+            // 需要调控字体的控件列表
+            bool shouldResizeFont = control is Label || control is Button || control is TextBox || control is ComboBox
+                                   || control is CheckBox || control is RadioButton || control is GroupBox;
+                                                     
             if (shouldResizeFont)
             {
                 // 计算新的字体大小，使用较小的缩放比例以确保文字不会过大
                 float newFontSize = originalInfo.OriginalFontSize * Math.Min(scaleX, scaleY);
-
                 // 确保字体大小在合理范围内(6-72)
-                if (newFontSize >= 6 && newFontSize <= 72)
+                if (newFontSize >= 6 && newFontSize <= 20)
                 {
-                    // 创建新字体对象，保持原有字体的其他属性（样式、字体族等）
-                    //using (var newFont = new Font(
-                    //    originalInfo.OriginalFont.FontFamily,
-                    //    newFontSize,
-                    //    originalInfo.OriginalFont.Style,
-                    //    originalInfo.OriginalFont.Unit,
-                    //    originalInfo.OriginalFont.GdiCharSet))
-                    //{
-                    //    control.Font = newFont;
-                    //}
-
-                    control.Font = new Font(control.Font.Name, newFontSize, control.Font.Style, control.Font.Unit);
-
-                    //using (var newFont = new Font(
-                    //    originalInfo.OriginalFont.Name,
-                    //    originalInfo.OriginalFontSize,
-                    //    originalInfo.OriginalFont.Style,
-                    //    originalInfo.OriginalFont.Unit
-                    //    ))
-                    //{
-                    //    control.Font = newFont;
-                    //}
+                    control.Font = new Font(control.Font.Name, newFontSize, control.Font.Style, control.Font.Unit);                   
                 }
             }
 
-            // 特殊控件的处理
-            //if (control is TextBox || control is ComboBox)
-            //{
-            //    // 调整文本控件的字体大小
-            //    float newFontSize = originalInfo.OriginalFontSize * Math.Min(scaleX, scaleY);
-            //    // 确保字体大小在合理范围内(6-72)
-            //    if (newFontSize >= 6 && newFontSize <= 72)
-            //    {
-            //        control.Font = new Font(originalInfo.OriginalFont.FontFamily,
-            //            newFontSize,
-            //            originalInfo.OriginalFont.Style);
-            //    }
-            //}
-            if (control is PictureBox pic)
-            {
-                // 图片控件缩放目前不需要特殊处理
-                if (pic.SizeMode == PictureBoxSizeMode.Zoom)
-                {
-                    // Zoom模式下不需要特殊处理
-                }
-            }
-            else if (control is GroupBox || control is Panel)
+            if (control is GroupBox || control is Panel)
             {
                 // 调整容器控件的内边距
                 if (originalInfo.OriginalPadding != new Padding())
@@ -332,7 +352,6 @@ namespace DRSystem
                         (int)(originalInfo.OriginalPadding.Bottom * scaleY));
                 }
             }
-
             // 递归处理子控件
             if (control.Controls.Count > 0)
             {

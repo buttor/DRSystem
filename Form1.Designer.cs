@@ -139,7 +139,7 @@
             // 文件ToolStripMenuItem
             // 
             this.文件ToolStripMenuItem.Name = "文件ToolStripMenuItem";
-            this.文件ToolStripMenuItem.Size = new System.Drawing.Size(71, 26);
+            this.文件ToolStripMenuItem.Size = new System.Drawing.Size(71, 24);
             this.文件ToolStripMenuItem.Text = "文件(F)";
             // 
             // 功能ToolStripMenuItem
@@ -148,7 +148,7 @@
             this.运行模式ToolStripMenuItem,
             this.分析模式ToolStripMenuItem});
             this.功能ToolStripMenuItem.Name = "功能ToolStripMenuItem";
-            this.功能ToolStripMenuItem.Size = new System.Drawing.Size(53, 26);
+            this.功能ToolStripMenuItem.Size = new System.Drawing.Size(53, 24);
             this.功能ToolStripMenuItem.Text = "功能";
             // 
             // 运行模式ToolStripMenuItem
@@ -169,7 +169,7 @@
             this.窗口设置ToolStripMenuItem,
             this.相机设置ToolStripMenuItem});
             this.设置ToolStripMenuItem.Name = "设置ToolStripMenuItem";
-            this.设置ToolStripMenuItem.Size = new System.Drawing.Size(53, 26);
+            this.设置ToolStripMenuItem.Size = new System.Drawing.Size(53, 24);
             this.设置ToolStripMenuItem.Text = "设置";
             // 
             // 窗口设置ToolStripMenuItem
@@ -187,13 +187,13 @@
             // 工具ToolStripMenuItem
             // 
             this.工具ToolStripMenuItem.Name = "工具ToolStripMenuItem";
-            this.工具ToolStripMenuItem.Size = new System.Drawing.Size(72, 26);
+            this.工具ToolStripMenuItem.Size = new System.Drawing.Size(72, 24);
             this.工具ToolStripMenuItem.Text = "工具(T)";
             // 
             // 帮助ToolStripMenuItem
             // 
             this.帮助ToolStripMenuItem.Name = "帮助ToolStripMenuItem";
-            this.帮助ToolStripMenuItem.Size = new System.Drawing.Size(75, 26);
+            this.帮助ToolStripMenuItem.Size = new System.Drawing.Size(75, 24);
             this.帮助ToolStripMenuItem.Text = "帮助(H)";
             // 
             // statusStrip1
@@ -424,6 +424,7 @@
             // 
             // button7
             // 
+            this.button7.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.button7.Location = new System.Drawing.Point(6, 99);
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(133, 29);
@@ -603,7 +604,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 25);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(346, 481);
+            this.tabPage2.Size = new System.Drawing.Size(346, 482);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "光源";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -840,11 +841,13 @@
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
+            this.MinimumSize = new System.Drawing.Size(1918, 1008);
             this.Name = "MainForm";
             this.Text = "DR系统软件";
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.ResizeBegin += new System.EventHandler(this.MainForm_ResizeBegin);
             this.ResizeEnd += new System.EventHandler(this.MainForm_ResizeEnd);
+            this.SizeChanged += new System.EventHandler(this.MainForm_SizeChanged);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
